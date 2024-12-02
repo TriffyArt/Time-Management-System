@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Time Tracking System</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="flex flex-col min-h-screen bg-green-800 text-black p-8">
+    <header class="max-w-3xl w-full mx-auto text-center mb-4">
+        <h1 class="font-normal mb-4">Time Trackerr</h1>
+    </header>
+
+    <h2 id="switch" class="text-lg font-semibold text-teal-300 mb-4 flex justify-center"></h2>
+
+    <form id="task-form" class="flex justify-center items-center max-w-3xl w-full mx-auto mb-4">
+        <input type="text" id="task-input" placeholder="What are you working on?" class="flex-1 p-3 bg-green-900 text-white border border-gray-300 rounded-lg mr-2" />
+        <input type="submit" id="task-submit" value="Add Task" class="text-white font-semibold bg-orange-500 p-3 rounded-lg cursor-pointer transition-opacity hover:opacity-80" />
+    </form>
+
+    <main class="flex-1 max-w-3xl w-full mx-auto">
+        <section class="task-list mb-4">
+            <h2 class="font-normal mb-2">Tasks</h2>
+            <div id="tasks" class="space-y-4">
+                <!-- Tasks will appear here -->
+            </div>
+        </section>
+
+        <!-- Canvas elements for the charts -->
+        <section class="charts mb-4">
+            <canvas id="daily-summary-chart" width="400" height="200"></canvas>
+            <canvas id="weekly-summary-chart" width="400" height="200"></canvas>
+        </section>
+    </main>
+
+    <!-- Include Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Your main script -->
+    <script src="src/main.js" defer></script>
+</body>
+
+</html>
