@@ -1,45 +1,72 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-    <title>Time Tracking System</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="src/style.css">
+  <title>Vite App</title>
 </head>
 
-<body class="flex flex-col min-h-screen bg-green-800 text-black p-8">
-    <header class="max-w-3xl w-full mx-auto text-center mb-4">
-        <h1 class="font-normal mb-4">Time Trackerr</h1>
-    </header>
 
-    <h2 id="switch" class="text-lg font-semibold text-teal-300 mb-4 flex justify-center"></h2>
+<body class="bg-[#f6fcff]">
 
-    <form id="task-form" class="flex justify-center items-center max-w-3xl w-full mx-auto mb-4">
-        <input type="text" id="task-input" placeholder="What are you working on?" class="flex-1 p-3 bg-green-900 text-white border border-gray-300 rounded-lg mr-2" />
-        <input type="submit" id="task-submit" value="Add Task" class="text-white font-semibold bg-orange-500 p-3 rounded-lg cursor-pointer transition-opacity hover:opacity-80" />
-    </form>
+  <nav class="flex px-4 border-b md:shadow-lg items-center relative">
+    <div class="text-lg font-bold md:py-0 py-4">
+      TrackTask
+    </div>
+    <ul class="md:px-2 ml-auto md:flex md:space-x-2 absolute md:relative top-full left-0 right-0">
+      <li>
+        <a href="#" class="flex md:inline-flex p-4 items-center hover:bg-gray-50">
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="flex md:inline-flex p-4 items-center hover:bg-gray-50">
+          <span>Task</span>
+        </a>
+      </li>
 
-    <main class="flex-1 max-w-3xl w-full mx-auto">
-        <section class="task-list mb-4">
-            <h2 class="font-normal mb-2">Tasks</h2>
-            <div id="tasks" class="space-y-4">
-                <!-- Tasks will appear here -->
-            </div>
-        </section>
+      <li class="relative parent">
+        <a href="#" class="flex justify-between md:inline-flex p-4 items-center hover:bg-gray-50 space-x-2">
+          <span>Summarys</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
 
-        <!-- Canvas elements for the charts -->
-        <section class="charts mb-4">
-            <canvas id="daily-summary-chart" width="400" height="200"></canvas>
-            <canvas id="weekly-summary-chart" width="400" height="200"></canvas>
-        </section>
-    </main>
+  <div class="flex-1 justify-end ">
+    <!-- Canvas elements for the charts -->
+    <section class="charts float-right justify-end">
+      <canvas id="daily-summary-chart" width="400" height="200"></canvas>
+      <canvas id="weekly-summary-chart" width="400" height="200"></canvas>
+    </section>
+  </div>
 
-    <!-- Include Chart.js from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Your main script -->
-    <script src="src/main.js" defer></script>
+  <h2 id="switch" class="text-lg font-semibold text-teal-300 mb-4 flex justify-center"></h2>
+
+  <form id="task-form" class="flex justify-center items-center max-w-3xl w-full mx-auto mb-4">
+    <input type="text" id="task-input" placeholder="What are you working on?"
+      class="flex-1 p-3 bg-inherit text-white border border-gray-300 rounded-lg mr-2" />
+    <input type="submit" id="task-submit" value="Add Task"
+      class="text-white font-semibold bg-gray-600 p-3 rounded-lg cursor-pointer transition-opacity hover:opacity-80" />
+  </form>
+  
+
+  <div class="flex-1 max-w-3xl w-full mx-auto">
+    <section class="task-list mb-4">
+      <h2 class="font-normal text-[30px] mb-2">Tasks</h2>
+      <div id="tasks" class="space-y-4">
+        <!-- Tasks will appear here -->
+      </div>
+    </section>
+  </div>
+
+
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>
