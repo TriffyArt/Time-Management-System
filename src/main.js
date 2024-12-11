@@ -1,268 +1,128 @@
-window.addEventListener('load', () => {
-  const personalisation = document.querySelector('#switch');
-  let day;
-
-  // Get the current day
-  switch (new Date().getDay()) {
-    case 0: day = "Sunday"; break;
-    case 1: day = "Monday"; break;
-    case 2: day = "Tuesday"; break;
-    case 3: day = "Wednesday"; break;
-    case 4: day = "Thursday"; break;
-    case 5: day = "Friday"; break;
-    case 6: day = "Saturday"; break;
+$(document).ready(function () {
+  function loadTasks() {
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    tasks.sort((a, b) => sortByPriorityAndDate(a, b)); // Sort by priority and date
+    $("#task-list").empty(); // Clear current list
+    tasks.forEach((task, index) => displayTask(task, index));
   }
 
-  personalisation.innerHTML = "Magandang " + day + " Sayo!";
+  function saveTasks(tasks) {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
 
-  const form = document.querySelector('#task-form');
-  const input = document.querySelector('#task-input');
-  const list_el = document.querySelector('#tasks');
-  const dailyChartCtx = document.getElementById('daily-summary-chart').getContext('2d');
-  const weeklyChartCtx = document.getElementById('weekly-summary-chart').getContext('2d');
+  function renderTasks(filteredTasks) {
+    $("#task-list").empty(); // Clear existing tasks
+    filteredTasks.forEach((task, index) => displayTask(task, index));
+  }
 
-  let tasksFromStorage = JSON.parse(localStorage.getItem('tasks')) || [];
-  let taskTimes = JSON.parse(localStorage.getItem('taskTimes')) || {}; // To track task times
+  function filterTasks() {
+    const selectedPriority = $("#priorityFilter").val();
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    let filteredTasks = tasks;
 
-  // Initialize Chart.js charts
-  const dailyChart = new Chart(dailyChartCtx, {
-    type: 'bar',
-    data: {
-      labels: [], // Task names
-      datasets: [{
-        label: 'Time Spent (hrs)',
-        data: [], // Time spent (in hours)
-        backgroundColor: 'rgba(255, 124, 47, 0.5)',
-        borderColor: 'rgba(255, 124, 47, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-        }
-      }
+    if (selectedPriority !== "all") {
+      filteredTasks = tasks.filter(task => task.priority === selectedPriority);
     }
-  });
 
-  const weeklyChart = new Chart(weeklyChartCtx, {
-    type: 'line',
-    data: {
-      labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], // Days of the week
-      datasets: [{
-        label: 'Time Spent (hrs)',
-        data: [], // Weekly time data
-        backgroundColor: 'rgba(255, 124, 47, 0.5)',
-        borderColor: 'rgba(255, 124, 47, 1)',
-        fill: false,
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-        }
-      }
-    }
-  });
+    // Sort tasks by priority and date
+    filteredTasks.sort((a, b) => sortByPriorityAndDate(a, b));
 
-  // Load saved tasks and times
-  tasksFromStorage.forEach(task => {
-    createTask(task.name, task.time);
-  });
+    renderTasks(filteredTasks);
+  }
 
-  // Handle form submission
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
+  function sortByPriorityAndDate(a, b) {
+    const priorityOrder = { high: 1, medium: 2, low: 3 };
+    const dateDifference = new Date(a.date) - new Date(b.date); // Sort by date first
+    if (dateDifference !== 0) return dateDifference;
+    return priorityOrder[a.priority] - priorityOrder[b.priority]; // Then by priority
+  }
+  
 
-    const task = capitalise(input.value);
-    if (!task) {
-      alert("Please add a task");
+  function displayTask(task, index) {
+    const taskDiv = $(`
+      <div class="task" data-index="${index}">
+        <div class="task-header">
+          <span><strong>${task.title}</strong></span>
+          <div>
+            <button class="edit-task">Edit</button>
+            <button class="remove-task">Remove</button>
+          </div>
+        </div>
+        <div class="task-details">${task.details}</div>
+        <div class="task-details">${task.date}</div>
+        <div class="task-details">${task.priority}</div>
+      </div>
+    `);
+
+    taskDiv.find(".edit-task").on("click", () => editTask(index));
+    taskDiv.find(".remove-task").on("click", () => removeTask(index));
+
+    $("#task-list").append(taskDiv);
+  }
+
+  $("#priorityFilter").on("change", filterTasks);
+
+  // Add task
+  $("#add-task").on("click", function () {
+    const title = $("#task-title").val().trim();
+    const details = $("#task-details").val().trim();
+    const date = $("#Date").val();
+    const priority = $("#priority").val();
+
+    if (!title || !details || !date || !priority) {
+      $("#error-message").text("All fields are required!").show();
       return;
     }
 
-    createTask(task, "00:00:00");
+    const today = new Date().setHours(0, 0, 0, 0);
+    const selectedDate = new Date(date).setHours(0, 0, 0, 0);
 
-    tasksFromStorage.push({ name: task, time: "00:00:00" });
-    localStorage.setItem('tasks', JSON.stringify(tasksFromStorage));
+    if (selectedDate < today) {
+      $("#error-message").text("Cannot add tasks for past dates!").show();
+      return;
+    }
 
-    // Initialize daily and weekly data for the new task
-    taskTimes[task] = { daily: {}, weekly: {} };
-    localStorage.setItem('taskTimes', JSON.stringify(taskTimes));
+    $("#error-message").hide(); // Hide error message on successful validation
 
-    input.value = "";
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    tasks.push({ title, details, date, priority });
+    saveTasks(tasks);
+    loadTasks();
+
+    // Clear input fields
+    $("#task-title").val("");
+    $("#task-details").val("");
+    $("#Date").val("");
+    $("#priority").val("");
   });
 
-  // Capitalize task name
-  function capitalise(str) {
-    return str[0].toUpperCase() + str.slice(1);
-  }
+  // Edit task
+  function editTask(index) {
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const task = tasks[index];
 
-  // Create a task element
-  function createTask(task, time) {
-    const task_el = document.createElement('div');
-    task_el.classList.add('task');
-    list_el.appendChild(task_el);
+    const newTitle = prompt("Edit task title:", task.title);
+    const newDetails = prompt("Edit task details:", task.details);
 
-    const content_el = document.createElement('div');
-    content_el.classList.add('content');
-    task_el.appendChild(content_el);
-
-    const input_el = document.createElement('input');
-    input_el.classList.add('text');
-    input_el.type = 'text';
-    input_el.value = task;
-    input_el.setAttribute('readonly', 'readonly');
-    content_el.appendChild(input_el);
-
-    const counter_el = document.createElement('div');
-    counter_el.classList.add('counter');
-    task_el.appendChild(counter_el);
-
-    const time_el = document.createElement('div');
-    time_el.classList.add('time');
-    time_el.innerText = time;
-    counter_el.appendChild(time_el);
-
-    const controls_el = document.createElement('div');
-    controls_el.classList.add('controls');
-    counter_el.appendChild(controls_el);
-
-    const start_btn = document.createElement('button');
-    start_btn.classList.add('start');
-    start_btn.innerText = "Start";
-
-    const stop_btn = document.createElement('button');
-    stop_btn.classList.add('stop');
-    stop_btn.innerText = "Stop";
-
-    const reset_btn = document.createElement('button');
-    reset_btn.classList.add('reset');
-    reset_btn.innerText = "Reset";
-
-    controls_el.appendChild(start_btn);
-    controls_el.appendChild(stop_btn);
-    controls_el.appendChild(reset_btn);
-
-    const actions_el = document.createElement('div');
-    actions_el.classList.add('actions');
-    task_el.appendChild(actions_el);
-
-    const edit_btn = document.createElement('button');
-    edit_btn.classList.add('edit');
-    edit_btn.innerText = "Edit Task";
-
-    const delete_btn = document.createElement('button');
-    delete_btn.classList.add('delete');
-    delete_btn.innerText = "Delete Task";
-
-    actions_el.appendChild(edit_btn);
-    actions_el.appendChild(delete_btn);
-
-    let seconds = 0;
-    let interval = null;
-
-    start_btn.addEventListener('click', start);
-    stop_btn.addEventListener('click', stop);
-    reset_btn.addEventListener('click', reset);
-
-    // Timer function to update task time
-    function timer() {
-      seconds++;
-      let hrs = Math.floor(seconds / 3600);
-      let mins = Math.floor((seconds - (hrs * 3600)) / 60);
-      let secs = seconds % 60;
-      if (secs < 10) secs = '0' + secs;
-      if (mins < 10) mins = '0' + mins;
-      if (hrs < 10) hrs = '0' + hrs;
-      time_el.innerText = `${hrs}:${mins}:${secs}`;
+    if (newTitle !== null && newTitle.trim() !== "") {
+      task.title = newTitle.trim();
+    }
+    if (newDetails !== null && newDetails.trim() !== "") {
+      task.details = newDetails.trim();
     }
 
-    // Start timer
-    function start() {
-      if (interval) {
-        return;
-      }
-      interval = setInterval(timer, 1000);
-    }
-
-    // Stop timer and save time
-    function stop() {
-      clearInterval(interval);
-      interval = null;
-
-      // Save the time spent for the task
-      const timeSpent = seconds / 3600; // convert to hours
-      const taskName = input_el.value;
-      taskTimes[taskName].daily[day] = timeSpent;
-      taskTimes[taskName].weekly[day] = timeSpent;
-      localStorage.setItem('taskTimes', JSON.stringify(taskTimes));
-
-      // Update the daily and weekly charts
-      updateDailyChart();
-      updateWeeklyChart();
-    }
-
-    // Reset timer
-    function reset() {
-      stop();
-      seconds = 0;
-      time_el.innerText = "00:00:00";
-    }
-
-    // Edit task
-    edit_btn.addEventListener('click', () => {
-      if (edit_btn.innerText.toLowerCase() == 'edit task') {
-        input_el.removeAttribute('readonly');
-        input_el.focus();
-        edit_btn.innerText = "Save";
-      } else {
-        input_el.setAttribute('readonly', 'readonly');
-        edit_btn.innerText = "Edit Task";
-
-        const taskIndex = tasksFromStorage.findIndex(task => task.name === input_el.value);
-        tasksFromStorage[taskIndex].name = input_el.value;
-        localStorage.setItem('tasks', JSON.stringify(tasksFromStorage));
-      }
-    });
-
-    // Delete task
-    delete_btn.addEventListener('click', () => {
-      list_el.removeChild(task_el);
-
-      const taskIndex = tasksFromStorage.findIndex(task => task.name === input_el.value);
-      tasksFromStorage.splice(taskIndex, 1);
-      localStorage.setItem('tasks', JSON.stringify(tasksFromStorage));
-
-      delete taskTimes[input_el.value];
-      localStorage.setItem('taskTimes', JSON.stringify(taskTimes));
-    });
+    tasks[index] = task;
+    saveTasks(tasks);
+    loadTasks();
   }
 
-  // Update daily chart with task data
-  function updateDailyChart() {
-    const taskNames = Object.keys(taskTimes);
-    const timeData = taskNames.map(taskName => {
-      return taskTimes[taskName].daily[day] || 0; // Get daily time for each task
-    });
-
-    dailyChart.data.labels = taskNames;
-    dailyChart.data.datasets[0].data = timeData;
-    dailyChart.update();
+  // Remove task
+  function removeTask(index) {
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    tasks.splice(index, 1);
+    saveTasks(tasks);
+    loadTasks();
   }
 
-  // Update weekly chart with task data
-  function updateWeeklyChart() {
-    const taskNames = Object.keys(taskTimes);
-    const weeklyData = taskNames.map(taskName => {
-      return Object.values(taskTimes[taskName].weekly).reduce((sum, time) => sum + time, 0);
-    });
-
-    weeklyChart.data.datasets[0].data = weeklyData;
-    weeklyChart.update();
-  }
+  loadTasks();
 });
